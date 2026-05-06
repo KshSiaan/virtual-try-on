@@ -1,11 +1,14 @@
+"use client";
 import Image from "next/image";
 import React from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import Link from "next/link";
 import { Button } from "../ui/button";
-import { UserRoundPenIcon } from "lucide-react";
+import { LogInIcon, UserRoundPenIcon } from "lucide-react";
+import { authClient } from "@/lib/auth-client";
 
 export default function Navbar() {
+  const { data, isPending } = authClient.useSession();
   return (
     <>
       <nav className="fixed top-0 left-0 w-full z-20 bg-background">
@@ -18,17 +21,19 @@ export default function Navbar() {
             className="size-8"
           />
           <div className="">
-            <Link href={"/me"} className="flex items-center gap-2 group">
+            <Button variant={"outline"} asChild>
+              <Link href={"/auth/signin"}>
+                Sign in <LogInIcon />
+              </Link>
+            </Button>
+            {/*             <Link href={"/me"} className="flex items-center gap-2 group">
               <Avatar>
                 <AvatarImage
                   src={`https://api.dicebear.com/9.x/adventurer/svg?eyebrows=variant02&eyes=variant17&hairColor=592454,796a45,85c2c6&skinColor=ecad80&seed=Chase`}
                 />
                 <AvatarFallback>UI</AvatarFallback>
               </Avatar>
-              {/* <span className="text-sm font-semibold text-primary group-hover:underline">
-            Profile
-          </span> */}
-            </Link>
+            </Link> */}
           </div>
         </div>
         <div className="border-b w-full p-2 flex justify-between items-center gap-4">

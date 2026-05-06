@@ -1,3 +1,5 @@
+"use client";
+
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -11,104 +13,123 @@ import {
   FieldDescription,
   FieldGroup,
   FieldLabel,
-  FieldSeparator,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import Image from "next/image";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { authClient } from "@/lib/auth-client";
+import { toast } from "sonner";
+
+const registerSchema = z.object({
+  name: z.string().min(2, "Min 2 chars"),
+  email: z.email("Invalid email"),
+  password: z.string().min(6, "Min 6 chars"),
+});
+
+type RegisterFormData = z.infer<typeof registerSchema>;
 
 const RegisterForm = () => {
+  const router = useRouter();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<RegisterFormData>({
+    resolver: zodResolver(registerSchema),
+    defaultValues: {
+      name: "",
+      email: "",
+      password: "",
+    },
+  });
+
+  const onSubmit = async (data: RegisterFormData) => {
+    setIsSubmitting(true);
+
+    try {
+      await authClient.signUp.email(
+        {
+          email: data.email,
+          password: data.password,
+          name: data.name,
+        },
+        {
+          onError: (error) => {
+            toast.error(error.error.message);
+          },
+          onSuccess: () => {
+            toast.success("Registration successful!");
+            router.push("/auth/signin");
+          },
+        },
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
-    <section className="bg-foreground dark:bg-background min-h-screen relative flex items-center justify-center">
-      <div className="pointer-events-none absolute inset-0 right-0 overflow-hidden md:block hidden">
-        {/* Outer big circle */}
+    <section className="bg-foreground dark:bg-background relative flex min-h-screen items-center justify-center">
+      <div className="pointer-events-none absolute inset-0 right-0 hidden overflow-hidden md:block">
         <div className="absolute left-1/1 top-0 h-650 w-650 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white/10" />
-        {/* Inner circle */}
         <div className="absolute left-1/1 top-0 h-175 w-175 -translate-x-1/2 -translate-y-1/2 rounded-full bg-foreground dark:bg-background" />
       </div>
 
-      <div className="py-10 md:py-20 max-w-lg px-4 sm:px-0 mx-auto w-full">
-        <Card className="max-w-lg px-6 py-8 sm:p-12 relative">
-          <CardHeader className="text-center gap-6 p-0">
+      <div className="mx-auto w-full max-w-lg px-4 py-10 sm:px-0 md:py-20">
+        <Card className="relative max-w-lg px-6 py-8 sm:p-12">
+          <CardHeader className="gap-6 p-0 text-center">
             <div className="mx-auto">
-              <a href="">
-                <img
-                  src="https://images.shadcnspace.com/assets/logo/logo-icon-black.svg"
-                  alt="shadcnspace"
-                  className="dark:hidden h-10 w-10"
-                />
-                <img
-                  src="https://images.shadcnspace.com/assets/logo/logo-icon-white.svg"
-                  alt="shadcnspace"
-                  className="hidden dark:block h-10 w-10"
-                />
-              </a>
+              <Link href="/">
+                <Image src="/logo.png" height={64} width={64} alt="icon" />
+              </Link>
             </div>
             <div className="flex flex-col gap-1">
               <CardTitle className="text-2xl font-medium text-card-foreground">
-                Signup to Shadcn Space
+                Signup to Virtual Try-On
               </CardTitle>
-              <CardDescription className="text-sm text-muted-foreground font-normal">
+              <CardDescription className="text-sm font-normal text-muted-foreground">
                 Signup to your account now
               </CardDescription>
             </div>
           </CardHeader>
-          <CardContent className="p-0">
-            <form>
-              <FieldGroup className="gap-6">
-                <Field className="grid md:grid-cols-2 md:gap-6 gap-3">
-                  <Button
-                    variant="outline"
-                    type="button"
-                    className="text-sm text-medium text-card-foreground gap-2 cursor-pointer dark:bg-background rounded-lg h-9 shadow-xs"
-                  >
-                    <img
-                      src="https://images.shadcnspace.com/assets/svgs/icon-google.svg"
-                      alt="google icon"
-                      className="h-4 w-4"
-                    />
-                    Sign up with Google
-                  </Button>
-                  <Button
-                    variant="outline"
-                    type="button"
-                    className="text-sm text-medium text-card-foreground gap-2 cursor-pointer dark:bg-background rounded-lg h-9 shadow-xs"
-                  >
-                    <img
-                      src="https://images.shadcnspace.com/assets/svgs/icon-github.svg"
-                      alt="github icon"
-                      className="dark:hidden  h-4 w-4"
-                    />
-                    <img
-                      src="https://images.shadcnspace.com/assets/svgs/icon-github-white.svg"
-                      alt="github icon"
-                      className="hidden dark:block  h-4 w-4"
-                    />
-                    Sign up with Github
-                  </Button>
-                </Field>
-                <FieldSeparator className="*:data-[slot=field-separator-content]:bg-card text-sm text-muted-foreground bg-transparent">
-                  <span className="px-4">or sign up with</span>
-                </FieldSeparator>
 
+          <CardContent className="p-0">
+            <form onSubmit={handleSubmit(onSubmit)}>
+              <FieldGroup className="gap-6">
                 <div className="flex flex-col gap-4">
                   <Field className="gap-1.5">
                     <FieldLabel
                       htmlFor="name"
-                      className="text-sm text-muted-foreground font-normal"
+                      className="text-sm font-normal text-muted-foreground"
                     >
                       Name*
                     </FieldLabel>
                     <Input
-                      id="text"
+                      id="name"
                       type="text"
                       placeholder="enter your name"
-                      required
-                      className="dark:bg-background shadow-xs h-9"
+                      {...register("name")}
+                      disabled={isSubmitting}
+                      className="dark:bg-background h-9 shadow-xs"
                     />
+                    {errors.name && (
+                      <span className="text-sm text-red-500">
+                        {errors.name.message}
+                      </span>
+                    )}
                   </Field>
+
                   <Field className="gap-1.5">
                     <FieldLabel
                       htmlFor="email"
-                      className="text-sm text-muted-foreground font-normal"
+                      className="text-sm font-normal text-muted-foreground"
                     >
                       Email*
                     </FieldLabel>
@@ -116,40 +137,57 @@ const RegisterForm = () => {
                       id="email"
                       type="email"
                       placeholder="example@shadcnspace.com"
-                      required
-                      className="dark:bg-background shadow-xs h-9"
+                      {...register("email")}
+                      disabled={isSubmitting}
+                      className="dark:bg-background h-9 shadow-xs"
                     />
+                    {errors.email && (
+                      <span className="text-sm text-red-500">
+                        {errors.email.message}
+                      </span>
+                    )}
                   </Field>
+
                   <Field className="gap-1.5">
                     <FieldLabel
                       htmlFor="password"
-                      className="text-sm text-muted-foreground font-normal"
+                      className="text-sm font-normal text-muted-foreground"
                     >
                       Password*
                     </FieldLabel>
-
                     <Input
                       id="password"
                       type="password"
                       placeholder="Enter your password"
-                      required
-                      className="dark:bg-background shadow-xs h-9"
+                      {...register("password")}
+                      disabled={isSubmitting}
+                      className="dark:bg-background h-9 shadow-xs"
                     />
+                    {errors.password && (
+                      <span className="text-sm text-red-500">
+                        {errors.password.message}
+                      </span>
+                    )}
                   </Field>
                 </div>
 
                 <Field className="gap-4">
-                  <Button type="submit" size={"lg"} className="rounded-lg cursor-pointer h-10 hover:bg-primary/80">
-                    Sign up
+                  <Button
+                    type="submit"
+                    size="lg"
+                    disabled={isSubmitting}
+                    className="h-10 cursor-pointer rounded-lg hover:bg-primary/80 disabled:cursor-not-allowed"
+                  >
+                    {isSubmitting ? "Signing up..." : "Sign up"}
                   </Button>
                   <FieldDescription className="text-center text-sm font-normal text-muted-foreground">
                     Already have an account?{" "}
-                    <a
-                      href="#"
+                    <Link
+                      href="/auth/signin"
                       className="font-medium text-card-foreground no-underline!"
                     >
                       Sign in
-                    </a>
+                    </Link>
                   </FieldDescription>
                 </Field>
               </FieldGroup>

@@ -6,6 +6,8 @@ import Link from "next/link";
 import { Button } from "../ui/button";
 import { LogInIcon, UserRoundPenIcon } from "lucide-react";
 import { authClient } from "@/lib/auth-client";
+import { Spinner } from "../ui/spinner";
+import { Skeleton } from "../ui/skeleton";
 
 export default function Navbar() {
   const { data, isPending } = authClient.useSession();
@@ -21,19 +23,24 @@ export default function Navbar() {
             className="size-8"
           />
           <div className="">
-            <Button variant={"outline"} asChild>
-              <Link href={"/auth/signin"}>
-                Sign in <LogInIcon />
+            {isPending ? (
+              <Skeleton className="size-8 rounded-full" />
+            ) : data?.user ? (
+              <Link href={"/me"} className="flex items-center gap-2 group">
+                <Avatar>
+                  <AvatarImage
+                    src={`https://api.dicebear.com/9.x/adventurer/svg?eyebrows=variant02&eyes=variant17&hairColor=592454,796a45,85c2c6&skinColor=ecad80&seed=Chase`}
+                  />
+                  <AvatarFallback>UI</AvatarFallback>
+                </Avatar>
               </Link>
-            </Button>
-            {/*             <Link href={"/me"} className="flex items-center gap-2 group">
-              <Avatar>
-                <AvatarImage
-                  src={`https://api.dicebear.com/9.x/adventurer/svg?eyebrows=variant02&eyes=variant17&hairColor=592454,796a45,85c2c6&skinColor=ecad80&seed=Chase`}
-                />
-                <AvatarFallback>UI</AvatarFallback>
-              </Avatar>
-            </Link> */}
+            ) : (
+              <Button variant={"outline"} asChild>
+                <Link href={"/auth/signin"}>
+                  Sign in <LogInIcon />
+                </Link>
+              </Button>
+            )}
           </div>
         </div>
         <div className="border-b w-full p-2 flex justify-between items-center gap-4">

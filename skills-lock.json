@@ -19,6 +19,12 @@
       "skillPath": "better-auth/emailAndPassword/SKILL.md",
       "computedHash": "7786d722fa682b3d6a99793e73a9d51b59becefa595676134a993020633e068f"
     },
+    "shadcn": {
+      "source": "shadcn/ui",
+      "sourceType": "github",
+      "skillPath": "skills/shadcn/SKILL.md",
+      "computedHash": "f0fdd03f4755cbb3b57e20fe6fd4a97c00d34e6780187b6559316986e8d848db"
+    },
     "supabase": {
       "source": "supabase/agent-skills",
       "sourceType": "github",

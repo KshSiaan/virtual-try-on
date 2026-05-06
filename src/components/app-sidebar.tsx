@@ -48,12 +48,12 @@ const data = {
   navs: [
     {
       name: "Users",
-      url: "#",
+      url: "/admin/dashboard/users",
       icon: <UsersIcon />,
     },
     {
       name: "Affiliates",
-      url: "#",
+      url: "/admin/dashboard/affiliates",
       icon: <NotebookPenIcon />,
     },
   ],

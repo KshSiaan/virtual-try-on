@@ -8,11 +8,21 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { auth } from "@/lib/auth";
 import { HeartIcon, Share2Icon, ShoppingCartIcon } from "lucide-react";
+import { headers } from "next/headers";
 import Image from "next/image";
+import { redirect } from "next/navigation";
 import React from "react";
 
-export default function Page() {
+export default async function Page() {
+  const header = await headers();
+  const user = await auth.api.getSession({
+    headers: header,
+  });
+  if (!user?.session?.token) {
+    return redirect("/auth/signin");
+  }
   return (
     <div className="grid lg:grid-cols-5 p-6 gap-6 items-start h-full">
       <section className="lg:col-span-4 order-2 lg:order-1">

@@ -52,10 +52,12 @@ function trimByChars(value: string, maxChars: number) {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
+    console.log("[v0] Studio API request body:", body);
 
     // Validate request body with Zod
     const parsed = studioSchema.safeParse(body);
     if (!parsed.success) {
+      console.log("[v0] Validation failed:", parsed.error.flatten());
       return NextResponse.json(
         { success: false, message: "Validation failed", errors: parsed.error.flatten() },
         { status: 400 }
@@ -63,18 +65,24 @@ export async function POST(request: Request) {
     }
 
     const { tryon, closet, caption } = parsed.data;
+    console.log("[v0] Validated data - tryon:", tryon?.id, "closet items:", closet.length);
 
     // Authenticate user (Better Auth)
     const session = await auth.api.getSession({ headers: request.headers });
     if (!session?.session?.userId) {
+      console.log("[v0] Unauthorized - no session");
       return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 401 });
     }
+    console.log("[v0] Authenticated user:", session.session.userId);
 
     // Compress image inputs before prompt embedding to reduce token pressure.
+    console.log("[v0] Compressing images...");
     const tryonDataUrl = await fetchCompressedDataUrl(tryon.imgUrl);
+    console.log("[v0] Tryon image compressed");
     const closetDataUrls = await Promise.all(
       closet.map((c) => fetchCompressedDataUrl(c.imgUrl))
     );
+    console.log("[v0] Closet images compressed, count:", closetDataUrls.length);
 
     // Build a strong image-generation prompt. We include the data URIs and explicit
     // instructions to preserve identity/pose and to accurately apply clothing items.
@@ -104,17 +112,30 @@ export async function POST(request: Request) {
     );
 
     const prompt = trimByChars(promptLines.join("\n\n"), MAX_PROMPT_CHARS);
+    console.log("[v0] Prompt built, length:", prompt.length);
 
     // Call the Vercel AI SDK image generation API. We use async/await and handle
     // several possible response shapes. Prefer high-quality settings when supported.
-
-    const {image} = await generateImage({
+    console.log("[v0] Calling generateImage...");
+    const response = await generateImage({
       model: google.image('gemini-2.5-flash-image'),
       prompt,
       size: IMAGE_SIZE as `${number}x${number}`,
     });
+    console.log("[v0] Full response from generateImage:", JSON.stringify(response, null, 2));
+    
+    const image = response.image;
+    console.log("[v0] Image object:", image);
+    console.log("[v0] Image keys:", Object.keys(image || {}));
+    
+    if (!image || !image.base64) {
+      throw new Error(`Invalid image response: ${JSON.stringify(image)}`);
+    }
+    
+    console.log("[v0] Image generated, uploading to Supabase...");
 
     const {data} = await getSupabaseStorageClient().storage.from("studio").upload(`${session.session.userId}/${Date.now()}.webp`, Buffer.from(image.base64, "base64"), { contentType: "image/webp" });
+    console.log("[v0] Image uploaded, fullPath:", data?.fullPath);
 
     return NextResponse.json(
       {
@@ -129,7 +150,9 @@ export async function POST(request: Request) {
     );
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : String(err);
-    console.error("/api/studio error:", message);
+    const stack = err instanceof Error ? err.stack : "";
+    console.error("[v0] /api/studio error:", message);
+    console.error("[v0] Stack trace:", stack);
     return NextResponse.json({ success: false, message: message ?? "Internal server error" }, { status: 500 });
   }
 }

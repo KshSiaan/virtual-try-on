@@ -120,22 +120,46 @@ export async function POST(request: Request) {
     const response = await generateImage({
       model: google.image('gemini-2.5-flash-image'),
       prompt,
-      size: IMAGE_SIZE as `${number}x${number}`,
+      aspectRatio: "1:1",
     });
-    console.log("[v0] Full response from generateImage:", JSON.stringify(response, null, 2));
     
-    const image = response.image;
-    console.log("[v0] Image object:", image);
-    console.log("[v0] Image keys:", Object.keys(image || {}));
-    
-    if (!image || !image.base64) {
-      throw new Error(`Invalid image response: ${JSON.stringify(image)}`);
+    // Extract the first image from the images array
+    const images = (response as any).images;
+    if (!images || images.length === 0) {
+      throw new Error("No images returned from generateImage");
     }
     
-    console.log("[v0] Image generated, uploading to Supabase...");
+    const image = images[0];
+    console.log("[v0] Image generated, base64Data length:", image.base64Data?.length || 0);
+    
+    if (!image || !image.base64Data) {
+      throw new Error(`Invalid image response: missing base64Data`);
+    }
+    
+    console.log("[v0] Uploading to Supabase...");
+    const fileName = `${session.session.userId}/${Date.now()}.png`;
+    const buffer = Buffer.from(image.base64Data, "base64");
+    
+    const { data, error } = await getSupabaseStorageClient()
+      .storage
+      .from("studio")
+      .upload(fileName, buffer, { 
+        contentType: image.mediaType || "image/png",
+        upsert: false 
+      });
+    
+    if (error) {
+      console.error("[v0] Supabase upload error:", error);
+      throw new Error(`Failed to upload image: ${error.message}`);
+    }
+    
+    console.log("[v0] Image uploaded successfully, path:", data?.path);
 
-    const {data} = await getSupabaseStorageClient().storage.from("studio").upload(`${session.session.userId}/${Date.now()}.webp`, Buffer.from(image.base64, "base64"), { contentType: "image/webp" });
-    console.log("[v0] Image uploaded, fullPath:", data?.fullPath);
+    // Generate public URL for the uploaded image
+    const { data: { publicUrl } } = getSupabaseStorageClient()
+      .storage
+      .from("studio")
+      .getPublicUrl(fileName);
 
     return NextResponse.json(
       {
@@ -143,7 +167,8 @@ export async function POST(request: Request) {
         model: IMAGE_MODEL,
         size: IMAGE_SIZE,
         image: {
-          url: data?.fullPath
+          url: publicUrl,
+          path: data?.path
         },
       },
       { status: 200 }

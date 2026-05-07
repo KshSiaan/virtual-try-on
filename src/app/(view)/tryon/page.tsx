@@ -2,7 +2,7 @@
 
 import React from "react";
 import Image from "next/image";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -24,13 +24,19 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import TryonCard from "@/components/core/tryon-card";
 import Add from "./add";
-import { getTryonItems, type TryonItem } from "@/lib/api/tryon/functions";
+import {
+  deleteTryonItem,
+  getTryonItems,
+  type TryonItem,
+} from "@/lib/api/tryon/functions";
 import {
   InputGroup,
   InputGroupAddon,
   InputGroupInput,
 } from "@/components/ui/input-group";
-import { SearchIcon } from "lucide-react";
+import { EditIcon, SearchIcon } from "lucide-react";
+import { toast } from "sonner";
+import Link from "next/link";
 
 const PLACEHOLDER_IMAGE = "https://placehold.co/1000x800/png";
 const PLACEHOLDER_KEYS = [
@@ -89,11 +95,24 @@ export default function Page() {
     null,
   );
   const deferredSearch = React.useDeferredValue(search);
+  const qcl = useQueryClient();
 
   const { data, isLoading, isFetching, error } = useQuery({
     queryKey: ["tryon-items", page, limit, deferredSearch],
     queryFn: () => getTryonItems({ page, limit, q: deferredSearch }),
     placeholderData: (previous) => previous,
+  });
+
+  const { mutate: deleteItem } = useMutation({
+    mutationFn: async (id: string) => deleteTryonItem(id),
+    onSuccess: () => {
+      toast.success("Item deleted");
+      qcl.invalidateQueries({ queryKey: ["tryon-items"] });
+      setSelectedItem(null);
+    },
+    onError: (err: Error) => {
+      toast.error(err?.message || "Failed to delete item");
+    },
   });
 
   const items = data?.data ?? [];
@@ -293,6 +312,27 @@ export default function Page() {
                     ))}
                   </div>
                 ) : null}
+
+                <div className="flex justify-end gap-2">
+                  <Button variant="outline" asChild>
+                    <Link href={`/tryon/edit/${selectedItem.id}`}>
+                      <EditIcon /> Edit
+                    </Link>
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    onClick={() => {
+                      if (!selectedItem) return;
+                      const ok = confirm(
+                        "Delete this item? This cannot be undone.",
+                      );
+                      if (!ok) return;
+                      deleteItem(selectedItem.id);
+                    }}
+                  >
+                    Delete
+                  </Button>
+                </div>
               </div>
             </div>
           ) : null}

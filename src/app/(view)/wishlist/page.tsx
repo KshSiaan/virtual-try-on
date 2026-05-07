@@ -2,10 +2,10 @@
 
 import React from "react";
 import Image from "next/image";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -13,7 +13,17 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import {
   Select,
   SelectContent,
@@ -22,29 +32,26 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
-import ClosetCard from "@/components/core/closet-card";
-import {
-  getClosetItems,
-  deleteClosetItem,
-  type ClosetItem,
-} from "@/lib/api/closet/functions";
-import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import Add from "./add";
+import { HeartIcon, SearchIcon } from "lucide-react";
+import {
+  getWishlistItems,
+  deleteWishlistItem,
+  type WishlistItem,
+} from "@/lib/api/wishlist/functions";
 import {
   InputGroup,
   InputGroupAddon,
   InputGroupInput,
 } from "@/components/ui/input-group";
-import { SearchIcon } from "lucide-react";
 import Link from "next/link";
 
-const buildSizeTags = (item: ClosetItem) =>
+const buildSizeTags = (item: WishlistItem) =>
   [item.size, item.chest, item.shoulder, item.sleeve].filter(
     Boolean,
   ) as string[];
 
-function ClosetCardSkeleton() {
+function WishlistCardSkeleton() {
   return (
     <Card className="gap-0 py-3 pb-6">
       <CardContent className="flex h-[40dvh] items-center justify-center rounded-lg! p-0">
@@ -70,26 +77,85 @@ function ClosetCardSkeleton() {
   );
 }
 
-export default function Page() {
+function WishlistCard({
+  image,
+  name,
+  sizes,
+  onClick,
+}: {
+  image: string;
+  name: string;
+  sizes: string[];
+  onClick: () => void;
+  id: string;
+}) {
+  return (
+    <Card
+      className="gap-0 py-3 pb-6 cursor-pointer hover:shadow-md transition-shadow"
+      onClick={onClick}
+    >
+      <CardContent className="flex h-[40dvh] items-center justify-center rounded-lg! p-0 overflow-hidden bg-muted/30">
+        <Image
+          alt={name}
+          src={image}
+          width={300}
+          height={400}
+          className="h-full w-full object-contain"
+        />
+      </CardContent>
+      <CardContent className="space-y-3 border-t p-6">
+        <h3 className="font-semibold line-clamp-2">{name}</h3>
+        {sizes.length > 0 && (
+          <div className="flex flex-wrap gap-2">
+            {sizes.map((size) => (
+              <Badge key={size} variant="secondary" className="text-xs">
+                {size}
+              </Badge>
+            ))}
+          </div>
+        )}
+      </CardContent>
+      <CardFooter>
+        <Button variant="ghost" size="icon">
+          <HeartIcon fill="currentColor" className="text-red-500" />
+        </Button>
+      </CardFooter>
+    </Card>
+  );
+}
+
+export default function WishlistPage() {
   const [page, setPage] = React.useState(1);
   const [search, setSearch] = React.useState("");
   const [limit, setLimit] = React.useState(9);
-  const [selectedItem, setSelectedItem] = React.useState<ClosetItem | null>(
+  const [selectedItem, setSelectedItem] = React.useState<WishlistItem | null>(
     null,
   );
   const deferredSearch = React.useDeferredValue(search);
+  const qcl = useQueryClient();
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
+  // biome-ignore lint/correctness/useExhaustiveDependencies: reset page on search/limit change
   React.useEffect(() => {
     setPage(1);
   }, [deferredSearch, limit]);
 
   const { data, isLoading, isFetching, error } = useQuery({
-    queryKey: ["closet-items", page, limit, deferredSearch],
-    queryFn: () => getClosetItems({ page, limit, q: deferredSearch }),
+    queryKey: ["wishlist-items", page, limit, deferredSearch],
+    queryFn: () => getWishlistItems({ page, limit, q: deferredSearch }),
     placeholderData: (previous) => previous,
   });
-  const qcl = useQueryClient();
+
+  const { mutate: deleteItem } = useMutation({
+    mutationFn: async (id: string) => deleteWishlistItem(id),
+    onSuccess: () => {
+      toast.success("Item removed from wishlist");
+      qcl.invalidateQueries({ queryKey: ["wishlist-items"] });
+      setSelectedItem(null);
+    },
+    onError: (err: Error) => {
+      toast.error(err?.message || "Failed to remove item");
+    },
+  });
 
   const items = data?.data ?? [];
   const pagination = data?.pagination;
@@ -112,8 +178,7 @@ export default function Page() {
     <div className="grid h-full items-start gap-6 p-6 lg:grid-cols-5">
       <section className="order-2 lg:col-span-4 lg:order-1">
         <div className="mb-4 flex w-full items-center justify-between">
-          <h1 className="pb-4 text-xl font-bold">My Closet</h1>
-          <Add />
+          <h1 className="pb-4 text-xl font-bold">My Wishlist</h1>
         </div>
 
         <div className="mb-4 flex flex-col gap-3 rounded-lg border bg-card p-4 shadow-sm lg:flex-row lg:items-center lg:justify-between">
@@ -124,7 +189,7 @@ export default function Page() {
             <InputGroupInput
               value={search}
               onChange={(event) => setSearch(event.target.value)}
-              placeholder="Search closet items"
+              placeholder="Search wishlist items"
             />
           </InputGroup>
 
@@ -133,7 +198,7 @@ export default function Page() {
               value={String(limit)}
               onValueChange={(value) => setLimit(Number(value))}
             >
-              <SelectTrigger className="w-[140px]">
+              <SelectTrigger className="w-35">
                 <SelectValue placeholder="Per page" />
               </SelectTrigger>
               <SelectContent>
@@ -163,21 +228,17 @@ export default function Page() {
         <div className="grid h-full w-full gap-6 lg:grid-cols-3">
           {showFallbackCards
             ? Array.from({ length: 6 }, (_, index) => (
-                <ClosetCardSkeleton
-                  key={`placeholder-${
-                    // biome-ignore lint/suspicious/noArrayIndexKey: Skeletons
-                    index
-                  }`}
-                />
+                // biome-ignore lint/suspicious/noArrayIndexKey: Skeletons
+                <React.Fragment key={index}>
+                  <WishlistCardSkeleton />
+                </React.Fragment>
               ))
             : items.map((item) => (
-                <ClosetCard
+                <WishlistCard
                   key={item.id}
                   image={item.image}
                   name={item.name}
-                  category={`${item.type || "Item"} / ${item.fit || "regular"}`}
                   sizes={buildSizeTags(item)}
-                  wish={item.wish}
                   onClick={() => setSelectedItem(item)}
                   id={item.id}
                 />
@@ -211,9 +272,9 @@ export default function Page() {
         <div className="sticky top-30">
           <Card>
             <CardContent className="grid grid-cols-2 gap-4 p-6">
-              <Button>My Closet</Button>
+              <Button>My Wishlist</Button>
               <Button variant="outline" asChild>
-                <Link href="/wishlist">Wishlist</Link>
+                <Link href="/closet">My Closet</Link>
               </Button>
               <Button variant="outline" className="col-span-2">
                 Recommendations
@@ -229,7 +290,7 @@ export default function Page() {
       >
         <DialogContent className="sm:max-w-3xl">
           <DialogHeader>
-            <DialogTitle>{selectedItem?.name || "Closet item"}</DialogTitle>
+            <DialogTitle>{selectedItem?.name || "Wishlist item"}</DialogTitle>
             <DialogDescription>
               {selectedItem?.description || "No description available."}
             </DialogDescription>
@@ -255,6 +316,16 @@ export default function Page() {
                   <Badge variant="outline">
                     {selectedItem.fit || "regular"}
                   </Badge>
+                  <Badge
+                    variant="outline"
+                    className={`
+                      ${selectedItem.priority === "high" ? "border-red-500/50 bg-red-500/10 text-red-700" : ""}
+                      ${selectedItem.priority === "medium" ? "border-yellow-500/50 bg-yellow-500/10 text-yellow-700" : ""}
+                      ${selectedItem.priority === "low" ? "border-green-500/50 bg-green-500/10 text-green-700" : ""}
+                    `}
+                  >
+                    {selectedItem.priority || "Medium"}
+                  </Badge>
                   <Badge variant="outline">
                     {selectedItem.isPublic ? "Public" : "Private"}
                   </Badge>
@@ -277,6 +348,19 @@ export default function Page() {
                     <span className="text-muted-foreground">Sleeve:</span>{" "}
                     {selectedItem.sleeve || "—"}
                   </p>
+                  {selectedItem.url && (
+                    <p>
+                      <span className="text-muted-foreground">Link:</span>{" "}
+                      <a
+                        href={selectedItem.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-500 hover:underline"
+                      >
+                        View product
+                      </a>
+                    </p>
+                  )}
                   <p>
                     <span className="text-muted-foreground">Created:</span>{" "}
                     {new Date(selectedItem.createdAt).toLocaleString()}
@@ -297,27 +381,35 @@ export default function Page() {
                   </div>
                 ) : null}
 
-                <div className="flex justify-end gap-2">
-                  <Button
-                    variant="destructive"
-                    onClick={async () => {
-                      if (!selectedItem) return;
-                      const ok = confirm(
-                        "Delete this item? This cannot be undone.",
-                      );
-                      if (!ok) return;
-                      try {
-                        await deleteClosetItem(selectedItem.id);
-                        toast.success("Item deleted");
-                        qcl.invalidateQueries({ queryKey: ["closet-items"] });
-                        setSelectedItem(null);
-                      } catch (err: any) {
-                        toast.error(err?.message || "Failed to delete item");
-                      }
-                    }}
-                  >
-                    Delete
-                  </Button>
+                <div className="flex justify-end gap-2 pt-4">
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button variant="destructive">
+                        Remove from wishlist
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>
+                          Remove from wishlist?
+                        </AlertDialogTitle>
+                        <AlertDialogDescription>
+                          This will remove this item from your wishlist.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                          onClick={() => {
+                            if (!selectedItem) return;
+                            deleteItem(selectedItem.id);
+                          }}
+                        >
+                          Remove
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
                 </div>
               </div>
             </div>

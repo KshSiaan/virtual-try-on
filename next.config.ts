@@ -5,7 +5,7 @@ const supabaseHostname = supabaseUrl ? new URL(supabaseUrl).hostname : undefined
 
 const nextConfig: NextConfig = {
   images: {
-    domains: ["placehold.co", ...(supabaseHostname ? [supabaseHostname] : [])],
+    domains: ["placehold.co","zgxuxtqkrlqrmdukfohi.supabase.co", ...(supabaseHostname ? [supabaseHostname] : [])],
   },
 };
 

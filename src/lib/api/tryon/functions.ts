@@ -102,3 +102,70 @@ export async function getTryonItems({
 
   return res.json();
 }
+
+export async function getTryonItem(id: string): Promise<{ message: string; data: TryonItem }> {
+  const res = await fetch(`/api/tryon/${encodeURIComponent(id)}`, {
+    method: "GET",
+    credentials: "include",
+  });
+
+  if (!res.ok) {
+    const error = await res.json().catch(() => ({}));
+    throw new Error(error.message || "Failed to fetch try-on item");
+  }
+
+  return res.json();
+}
+
+export async function updateTryonItem(
+  id: string,
+  data: Partial<CreateTryonInput>,
+  imageFile: File | null,
+) {
+  const formData = new FormData();
+
+  if (data.name !== undefined) formData.append("name", data.name);
+  if (data.description !== undefined) formData.append("description", data.description || "");
+  if (data.isPublic !== undefined) formData.append("isPublic", String(data.isPublic));
+  if (data.type !== undefined) formData.append("type", data.type || "");
+  if (data.size !== undefined) formData.append("size", data.size || "");
+  if (data.fit !== undefined) formData.append("fit", data.fit || "");
+  if (data.chest !== undefined) formData.append("chest", data.chest || "");
+  if (data.shoulder !== undefined) formData.append("shoulder", data.shoulder || "");
+  if (data.sleeve !== undefined) formData.append("sleeve", data.sleeve || "");
+  if (data.waist !== undefined) formData.append("waist", data.waist || "");
+  if (data.rise !== undefined) formData.append("rise", data.rise || "");
+  if (data.inseam !== undefined) formData.append("inseam", data.inseam || "");
+  if (data.head !== undefined) formData.append("head", data.head || "");
+  if (data.shoe !== undefined) formData.append("shoe", data.shoe || "");
+
+  if (imageFile) {
+    formData.append("image", imageFile);
+  }
+
+  const res = await fetch(`/api/tryon/${encodeURIComponent(id)}`, {
+    method: "PATCH",
+    body: formData,
+  });
+
+  if (!res.ok) {
+    const error = await res.json().catch(() => ({}));
+    throw new Error(error.message || "Failed to update try-on item");
+  }
+
+  return res.json();
+}
+
+export async function deleteTryonItem(id: string) {
+  const res = await fetch(`/api/tryon/${encodeURIComponent(id)}`, {
+    method: "DELETE",
+    credentials: "include",
+  });
+
+  if (!res.ok) {
+    const error = await res.json().catch(() => ({}));
+    throw new Error(error.message || "Failed to delete try-on item");
+  }
+
+  return res.json();
+}

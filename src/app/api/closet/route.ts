@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth";
 import { createClosetSchema } from "@/lib/zod/closet";
 import { db } from "@/lib/db";
 import { closet } from "@/db/schema/closet-schema";
+import { wishlist } from "@/db/schema/wishlist-schema";
 import { v4 as uuidv4 } from "uuid";
 import { getSupabaseStorageClient } from "@/lib/supabase";
 import { and, count, desc, eq, ilike } from "drizzle-orm";
@@ -41,8 +42,18 @@ export async function GET(request: Request) {
 
     const [items, totalResult] = await Promise.all([
       db
-        .select()
+        .select({
+          closetItem: closet,
+          wishlistId: wishlist.id,
+        })
         .from(closet)
+        .leftJoin(
+          wishlist,
+          and(
+            eq(wishlist.closetItemId, closet.id),
+            eq(wishlist.authorId, session.session.userId)
+          )
+        )
         .where(and(...filters))
         .orderBy(desc(closet.createdAt))
         .limit(limit)
@@ -53,9 +64,14 @@ export async function GET(request: Request) {
         .where(and(...filters)),
     ]);
 
+    const data = items.map((row) => ({
+      ...row.closetItem,
+      wish: row.wishlistId !== null,
+    }));
+
     return Response.json({
       message: "Closet items fetched successfully",
-      data: items,
+      data,
       pagination: {
         page,
         limit,

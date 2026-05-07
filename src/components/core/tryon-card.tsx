@@ -60,49 +60,11 @@ export default function TryonCard({
           </div>
         ) : null}
       </CardContent>
-      {select ? (
+      {select && (
         <CardFooter className="flex items-center justify-between gap-2">
           <Button type="button" className="w-full" onClick={onSelect}>
             Select Try-on
           </Button>
-        </CardFooter>
-      ) : (
-        <CardFooter className="flex items-center justify-between gap-2 border-t">
-          <Button
-            type="button"
-            size="icon"
-            variant="ghost"
-            onClick={(event) => {
-              event.stopPropagation();
-              onFavorite?.();
-            }}
-          >
-            <HeartIcon />
-          </Button>
-          <div className="flex items-center gap-2">
-            <Button
-              type="button"
-              size="icon"
-              variant="ghost"
-              onClick={(event) => {
-                event.stopPropagation();
-                onAddToCart?.();
-              }}
-            >
-              <ShoppingCartIcon />
-            </Button>
-            <Button
-              type="button"
-              size="icon"
-              variant="ghost"
-              onClick={(event) => {
-                event.stopPropagation();
-                onShare?.();
-              }}
-            >
-              <Share2Icon />
-            </Button>
-          </div>
         </CardFooter>
       )}
     </Card>

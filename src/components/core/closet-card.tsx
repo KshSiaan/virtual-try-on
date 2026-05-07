@@ -1,33 +1,69 @@
+"use client";
+import React from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
-import { HeartIcon, Share2Icon, ShoppingCartIcon } from "lucide-react";
+import { EditIcon, HeartIcon, Share2Icon, Trash2Icon } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+import {
+  createWishlistItem,
+  removeWishlistItem,
+} from "@/lib/api/wishlist/functions";
 
 export type ClosetCardProps = {
   image: string;
   name: string;
+  id: string;
   category: string;
   sizes?: string[];
+  wish?: boolean;
   fallbackImage?: string;
   onClick?: () => void;
   onFavorite?: () => void;
-  onAddToCart?: () => void;
   onShare?: () => void;
 };
 
 export default function ClosetCard({
   image,
   name,
+  id,
   category,
   sizes = [],
+  wish = false,
   fallbackImage = "https://placehold.co/1000x800/png",
   onClick,
   onFavorite,
-  onAddToCart,
   onShare,
 }: ClosetCardProps) {
   const resolvedImage = image || fallbackImage;
+  const qcl = useQueryClient();
+  const [isInWishlist, setIsInWishlist] = React.useState(wish);
+
+  const wishlistMutation = useMutation({
+    mutationKey: ["toggle-wishlist-from-closet", id],
+    mutationFn: async (shouldAdd: boolean) => {
+      if (shouldAdd) {
+        return await createWishlistItem({ closetItemId: id });
+      }
+      return await removeWishlistItem(id);
+    },
+    onMutate: (shouldAdd: boolean) => {
+      setIsInWishlist(shouldAdd);
+    },
+    onSuccess: (_res, shouldAdd) => {
+      toast.success(shouldAdd ? "Added to wishlist" : "Removed from wishlist");
+      qcl.invalidateQueries({ queryKey: ["closet-items"] });
+      qcl.invalidateQueries({ queryKey: ["wishlist-items-all"] });
+    },
+    onError: (err: unknown) => {
+      setIsInWishlist(!isInWishlist);
+      const message = err instanceof Error ? err.message : String(err);
+      toast.error(message || "Failed to update wishlist");
+    },
+  });
 
   return (
     <Card
@@ -62,23 +98,31 @@ export default function ClosetCard({
           variant="ghost"
           onClick={(event) => {
             event.stopPropagation();
+            wishlistMutation.mutate(!isInWishlist);
             onFavorite?.();
           }}
+          disabled={wishlistMutation.status === "pending"}
           type="button"
         >
-          <HeartIcon />
+          {isInWishlist ? (
+            <HeartIcon fill="currentColor" className="text-red-600" />
+          ) : (
+            <HeartIcon />
+          )}
         </Button>
         <div className="flex items-center gap-2">
+          <Button size="icon" variant="ghost" type="button" asChild>
+            <Link href={`/closet/edit/${id}`}>
+              <EditIcon />
+            </Link>
+          </Button>
           <Button
             size="icon"
             variant="ghost"
-            onClick={(event) => {
-              event.stopPropagation();
-              onAddToCart?.();
-            }}
+            className="text-destructive"
             type="button"
           >
-            <ShoppingCartIcon />
+            <Trash2Icon />
           </Button>
           <Button
             size="icon"

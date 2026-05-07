@@ -117,11 +117,21 @@ export async function POST(request: Request) {
     // Call the Vercel AI SDK image generation API. We use async/await and handle
     // several possible response shapes. Prefer high-quality settings when supported.
     console.log("[v0] Calling generateImage...");
-    const {image} = await generateImage({
+    const response = await generateImage({
       model: google.image('gemini-2.5-flash-image'),
       prompt,
       size: IMAGE_SIZE as `${number}x${number}`,
     });
+    console.log("[v0] Full response from generateImage:", JSON.stringify(response, null, 2));
+    
+    const image = response.image;
+    console.log("[v0] Image object:", image);
+    console.log("[v0] Image keys:", Object.keys(image || {}));
+    
+    if (!image || !image.base64) {
+      throw new Error(`Invalid image response: ${JSON.stringify(image)}`);
+    }
+    
     console.log("[v0] Image generated, uploading to Supabase...");
 
     const {data} = await getSupabaseStorageClient().storage.from("studio").upload(`${session.session.userId}/${Date.now()}.webp`, Buffer.from(image.base64, "base64"), { contentType: "image/webp" });

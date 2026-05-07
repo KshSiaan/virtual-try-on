@@ -103,7 +103,7 @@ export default function Page() {
     : 1;
   const showFallbackCards = isLoading && items.length === 0;
   const detailTags = selectedItem ? buildTags(selectedItem) : [];
-
+  //
   return (
     <div className="grid h-full items-start gap-6 p-6 lg:grid-cols-4">
       <section className="lg:col-span-4">

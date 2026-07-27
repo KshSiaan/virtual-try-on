@@ -1,0 +1,43 @@
+{
+  "$schema": "https://ui.shadcn.com/schema.json",
+<<<<<<< HEAD
+  "style": "radix-luma",
+=======
+  "style": "radix-vega",
+>>>>>>> 9c30fdb6d669207e970434959966c84fc592eb7d
+  "rsc": true,
+  "tsx": true,
+  "tailwind": {
+    "config": "",
+    "css": "src/app/globals.css",
+    "baseColor": "neutral",
+    "cssVariables": true,
+    "prefix": ""
+  },
+  "iconLibrary": "lucide",
+  "rtl": false,
+  "menuColor": "default",
+  "menuAccent": "subtle",
+  "aliases": {
+    "components": "@/components",
+    "utils": "@/lib/utils",
+    "ui": "@/components/ui",
+    "lib": "@/lib",
+    "hooks": "@/hooks"
+  },
+  "registries": {
+<<<<<<< HEAD
+    "@cardcn": "https://cardcn.dev/r/{name}.json",
+    "@ui-layouts": "https://ui-layouts.com/r/{name}.json",
+    "@kibo-ui": "https://www.kibo-ui.com/r/{name}.json",
+    "@blocks-so": "https://blocks.so/r/{name}.json",
+    "@better-upload": "https://better-upload.com/r/{name}.json",
+    "@diceui": "https://diceui.com/r/{name}.json",
+    "@shadcnhooks": "https://shadcn-hooks.com/r/{name}.json",
+    "@intentui": "https://intentui.com/r/{name}"
+=======
+    "@shadcn-space": "https://shadcnspace.com/r/{name}.json",
+    "@diceui": "https://diceui.com/r/{name}.json"
+>>>>>>> 9c30fdb6d669207e970434959966c84fc592eb7d
+  }
+}

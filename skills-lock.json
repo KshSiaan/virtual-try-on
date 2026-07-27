@@ -1,0 +1,66 @@
+{
+  "version": 1,
+  "skills": {
+<<<<<<< HEAD
+    "better-auth-best-practices": {
+      "source": "better-auth/skills",
+      "sourceType": "github",
+=======
+    "ai-sdk": {
+      "source": "vercel/ai",
+      "sourceType": "github",
+      "skillPath": "skills/use-ai-sdk/SKILL.md",
+      "computedHash": "2249889eb47ef0f61c4dba4cf2afe01c1c8dd793bb4c24230347c1ab909bb7dd"
+    },
+    "better-auth-best-practices": {
+      "source": "better-auth/skills",
+      "sourceType": "github",
+      "skillPath": "better-auth/best-practices/SKILL.md",
+>>>>>>> 9c30fdb6d669207e970434959966c84fc592eb7d
+      "computedHash": "9ab075b5061be2a5f299c10505667345cc1ec76e8de4120901cfd586643e776f"
+    },
+    "create-auth-skill": {
+      "source": "better-auth/skills",
+      "sourceType": "github",
+<<<<<<< HEAD
+=======
+      "skillPath": "better-auth/create-auth/SKILL.md",
+>>>>>>> 9c30fdb6d669207e970434959966c84fc592eb7d
+      "computedHash": "393e8d2d795fa5797c9a4e0665f29183ea2e140233db59746d510340a10456e6"
+    },
+    "email-and-password-best-practices": {
+      "source": "better-auth/skills",
+      "sourceType": "github",
+<<<<<<< HEAD
+=======
+      "skillPath": "better-auth/emailAndPassword/SKILL.md",
+>>>>>>> 9c30fdb6d669207e970434959966c84fc592eb7d
+      "computedHash": "7786d722fa682b3d6a99793e73a9d51b59becefa595676134a993020633e068f"
+    },
+    "shadcn": {
+      "source": "shadcn/ui",
+      "sourceType": "github",
+<<<<<<< HEAD
+      "computedHash": "642a177bee320618caa49f5106cadb4e7594c606e867f61ba7b56d19cf745cd5"
+=======
+      "skillPath": "skills/shadcn/SKILL.md",
+      "computedHash": "f0fdd03f4755cbb3b57e20fe6fd4a97c00d34e6780187b6559316986e8d848db"
+>>>>>>> 9c30fdb6d669207e970434959966c84fc592eb7d
+    },
+    "supabase": {
+      "source": "supabase/agent-skills",
+      "sourceType": "github",
+<<<<<<< HEAD
+      "computedHash": "818d65251221019d5fed1d4fb4039866db09d9e4a05f97e536e95c407643b442"
+    },
+    "zod": {
+      "source": "smithery.ai",
+      "sourceType": "well-known",
+      "computedHash": "ebb08035d97225a107a9559e449b81600b876e3a03aaf644cc2bcfddbdb1c222"
+=======
+      "skillPath": "skills/supabase/SKILL.md",
+      "computedHash": "5e179217b674b2c9617e54b09578b1119a315c784c22a9f22d940926de082d87"
+>>>>>>> 9c30fdb6d669207e970434959966c84fc592eb7d
+    }
+  }
+}

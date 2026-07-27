@@ -1,0 +1,34 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1777989724495,
+      "tag": "0000_brave_deathstrike",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1778070000000,
+      "tag": "0001_add_closet_tryon_tables",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1778142801596,
+      "tag": "0002_little_rocket_raccoon",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1778400000000,
+      "tag": "0003_daily_studio_source_limits",
+      "breakpoints": true
+    }
+  ]
+}
